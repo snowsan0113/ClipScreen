@@ -1,9 +1,17 @@
 package snowsan0113.clipscreen;
 
 import javafx.application.Application;
+import javafx.event.ActionEvent;
+import javafx.event.EventType;
 import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuBar;
+import javafx.scene.control.MenuItem;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 import javafx.scene.shape.Circle;
 import javafx.stage.Stage;
 import javafx.scene.shape.Rectangle;
@@ -24,10 +32,27 @@ public class Main extends Application {
 
     @Override
     public void start(Stage stage) throws Exception {
-        HBox main_pane = new HBox();
+        VBox main_pane = new VBox();
         Scene scene = new Scene(main_pane, 320, 240);
         stage.setTitle("スクリーンショット");
         stage.setScene(scene);
+
+        //メニュー
+        Menu menu_file = new Menu("ファイル");
+        MenuItem exit_menu_item = new MenuItem("終了");
+        exit_menu_item.setOnAction((ActionEvent t) -> {
+            System.exit(0);
+        });
+        menu_file.getItems().addAll(exit_menu_item);
+
+        Menu menu_help = new Menu("ヘルプ");
+        MenuItem ver_menu_item = new MenuItem("バージョン情報");
+        menu_help.getItems().addAll(ver_menu_item);
+
+        MenuBar menuBar = new MenuBar();
+        menuBar.getMenus().addAll(menu_file, menu_help);
+        main_pane.getChildren().add(menuBar);
+
         stage.show();
         stage.setAlwaysOnTop(true);
 
