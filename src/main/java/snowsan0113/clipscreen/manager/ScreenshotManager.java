@@ -22,5 +22,15 @@ public class ScreenshotManager {
         Rectangle captureArea = new Rectangle((int) sc_x, (int) sc_y, (int) sc_w, (int) sc_h);
         BufferedImage image = robot.createScreenCapture(captureArea);
         ImageIO.write(image, "png", save_file);
+
+        SystemTray tray = SystemTray.getSystemTray();
+        Image inv_image = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
+        TrayIcon trayIcon = new TrayIcon(inv_image, "Tray Demo");
+        trayIcon.setImageAutoSize(true);
+        trayIcon.setToolTip("System tray icon demo");
+        tray.add(trayIcon);
+        trayIcon.setImageAutoSize(true);
+        trayIcon.displayMessage("スクリーンショットが保存されました",
+                "保存先：" + save_file.toURI().getPath(), TrayIcon.MessageType.INFO);
     }
 }
