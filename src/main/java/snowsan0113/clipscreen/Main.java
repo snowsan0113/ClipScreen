@@ -26,6 +26,8 @@ public class Main extends Application {
     private Location start_clip = null;
     private Location end_clip = null;
 
+    private Pane screen_pane = null;
+
     public static void main(String[] args) {
         launch();
     }
@@ -66,6 +68,7 @@ public class Main extends Application {
                             new Location(end_clip.x(), end_clip.y(), end_clip.z())
                     );
                     System.out.println("スクリーンショットが保存されました。");
+                    screen_pane.getChildren().clear();
                 } catch (AWTException | IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -91,7 +94,7 @@ public class Main extends Application {
         int width = displayMode.getWidth();
         int height = displayMode.getHeight();
 
-        Pane screen_pane = new Pane();
+        screen_pane = new Pane();
         Scene screen_scene = new Scene(screen_pane, width, height);
         Stage screen_stage = new Stage();
         screen_stage.setOpacity(0.2);
