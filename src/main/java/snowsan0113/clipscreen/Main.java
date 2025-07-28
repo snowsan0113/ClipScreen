@@ -9,17 +9,26 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.shape.Circle;
+import javafx.scene.text.Font;
+import javafx.scene.text.Text;
+import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.scene.shape.Rectangle;
 import snowsan0113.clipscreen.manager.ScreenshotManager;
+import snowsan0113.clipscreen.manager.SettingManager;
 import snowsan0113.clipscreen.util.Location;
 
 import java.awt.*;
+import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 
 public class Main extends Application {
 
@@ -57,8 +66,8 @@ public class Main extends Application {
 
         //ボタン
         Button save_button = new Button("保存する");
-        save_button.setPrefWidth(scene.getWidth());
-        save_button.setPrefHeight(scene.getHeight());
+        save_button.prefWidthProperty().bind(scene.widthProperty());
+        save_button.prefHeightProperty().bind(scene.heightProperty().divide(2));
         save_button.setStyle("-fx-background-color: silver;");
         save_button.setOnAction(actionEvent -> {
             if (start_clip != null && end_clip != null) {
@@ -84,7 +93,55 @@ public class Main extends Application {
         });
         save_button.setOnMouseEntered(e -> save_button.setStyle("-fx-background-color: #3399ff;"));
         save_button.setOnMouseExited(e -> save_button.setStyle("-fx-background-color: silver;"));
-        main_pane.getChildren().add(save_button);
+
+        Button setting_button = new Button("設定");
+        setting_button.prefWidthProperty().bind(scene.widthProperty());
+        setting_button.prefHeightProperty().bind(scene.heightProperty().divide(2));
+        setting_button.setStyle("-fx-background-color: silver;");
+        setting_button.setOnMouseEntered(e -> setting_button.setStyle("-fx-background-color: #3399ff;"));
+        setting_button.setOnMouseExited(e -> setting_button.setStyle("-fx-background-color: silver;"));
+        setting_button.setOnAction(actionEvent -> {
+            SettingManager setting = new SettingManager(SettingManager.SettingFile.SETTING);
+            VBox setting_pane = new VBox();
+            Scene setting_scene = new Scene(setting_pane, 320, 240);
+            Stage setting_stage = new Stage();
+            setting_stage.setTitle("設定");
+            setting_stage.setScene(setting_scene);
+            Text text = new Text("保存先");
+
+            TextField area = new TextField();
+            try {
+                area.setText(setting.getObjectValue("save_path"));
+            } catch (IOException | URISyntaxException e) {
+                throw new RuntimeException(e);
+            }
+            Button save_setting_button = new Button("設定");
+            save_setting_button.setOnAction(actionEvent1 -> {
+                DirectoryChooser fc = new DirectoryChooser();
+                fc.setTitle("ファイル選択");
+                File file = fc.showDialog(null);
+                if (file != null) {
+                    try {
+                        setting.saveObjectValue("save_path", file.getPath());
+                        Alert info = new Alert(Alert.AlertType.INFORMATION);
+                        info.setContentText("ファイルを" + file.toURI().getPath() + "にしました。");
+                        info.show();
+                    } catch (IOException | URISyntaxException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+                else {
+                    Alert warn = new Alert(Alert.AlertType.WARNING);
+                    warn.setContentText("ファイルを選択できませんでした。");
+                    warn.show();
+                }
+            });
+            setting_pane.getChildren().addAll(text, area, save_setting_button);
+
+            setting_stage.show();
+        });
+
+        main_pane.getChildren().addAll(save_button, setting_button);
 
         stage.show();
         stage.setAlwaysOnTop(true);

@@ -7,10 +7,20 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 
 public class ScreenshotManager {
 
-    private static final File save_file = new File("screenshot.png");
+    private static final File save_file;
+
+    static {
+        try {
+            String path_string = new SettingManager(SettingManager.SettingFile.SETTING).getObjectValue("save_path");
+            save_file = new File(path_string + "/screenshot.png");
+        } catch (IOException | URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     public static void save(Location start, Location end) throws AWTException, IOException {
         double sc_x = Math.min(start.x(), end.x());
