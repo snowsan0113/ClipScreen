@@ -53,6 +53,36 @@ public class Main extends Application {
         menuBar.getMenus().addAll(menu_file, menu_help);
         main_pane.getChildren().add(menuBar);
 
+        //ボタン
+        Button save_button = new Button("保存する");
+        save_button.setPrefWidth(scene.getWidth());
+        save_button.setPrefHeight(scene.getHeight());
+        save_button.setStyle("-fx-background-color: silver;");
+        save_button.setOnAction(actionEvent -> {
+            if (start_clip != null && end_clip != null) {
+                try {
+                    ScreenshotManager.save(
+                            new Location(start_clip.x(), start_clip.y(), start_clip.z()),
+                            new Location(end_clip.x(), end_clip.y(), end_clip.z())
+                    );
+                    System.out.println("スクリーンショットが保存されました。");
+                } catch (AWTException | IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            else {
+                Alert error = new Alert(Alert.AlertType.ERROR);
+                error.setContentText("スタート地点とエンド地点が設定されていません。");
+                stage.setAlwaysOnTop(false);
+                error.show();
+
+                error.setOnCloseRequest(e -> stage.setAlwaysOnTop(true));
+            }
+        });
+        save_button.setOnMouseEntered(e -> save_button.setStyle("-fx-background-color: #3399ff;"));
+        save_button.setOnMouseExited(e -> save_button.setStyle("-fx-background-color: silver;"));
+        main_pane.getChildren().add(save_button);
+
         stage.show();
         stage.setAlwaysOnTop(true);
 
