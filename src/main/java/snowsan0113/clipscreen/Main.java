@@ -1,26 +1,24 @@
 package snowsan0113.clipscreen;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.event.ActionEvent;
-import javafx.event.EventType;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
-import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.shape.Circle;
-import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.stage.DirectoryChooser;
-import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.scene.shape.Rectangle;
+import javafx.util.Duration;
 import snowsan0113.clipscreen.manager.ScreenshotManager;
 import snowsan0113.clipscreen.manager.SettingManager;
 import snowsan0113.clipscreen.util.Location;
@@ -29,6 +27,8 @@ import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class Main extends Application {
 
@@ -159,40 +159,61 @@ public class Main extends Application {
         screen_stage.setScene(screen_scene);
         screen_stage.show();
 
-        screen_scene.setOnMouseClicked(e -> {
-            Circle start_circle = null;
-            Circle end_circle = null;
+        screen_scene.setOnMousePressed(e -> {
+            Circle start_circle;
+            AtomicReference<Circle> end_circle = new AtomicReference<>();
             if (start_clip == null && end_clip == null) {
                 start_clip = new Location(e.getScreenX(), e.getScreenY(), 0);
                 start_circle = new Circle(start_clip.x(), start_clip.y(), 10);
                 screen_pane.getChildren().add(start_circle);
                 System.out.println("スタートでクリックした場所は" + start_clip.x() + "," + start_clip.y() + "," + start_clip.z());
-            }
-            else if (start_clip != null && end_clip == null) {
-                end_clip = new Location(e.getScreenX(), e.getScreenY() ,0);
-                end_circle = new Circle(end_clip.x(), end_clip.y(), 10);
-                double sc_x = Math.min(start_clip.x(), end_clip.x());
-                double sc_y = Math.min(start_clip.y(), end_clip.y());
-                double sc_w = Math.abs(start_clip.x() - end_clip.x());
-                double sc_h = Math.abs(start_clip.y() - end_clip.y());
-                Rectangle clip_area = new Rectangle((int) sc_x, (int) sc_y, (int) sc_w, (int) sc_h);
-                screen_pane.getChildren().add(clip_area);
-                screen_pane.getChildren().add(end_circle);
-                System.out.println("エンドでクリックした場所は" + end_clip.x() + "," + end_clip.y() + "," + end_clip.z());
-            }
-            else if (start_clip != null && end_clip != null) {
-                try {
-                    ScreenshotManager.save(
-                            new Location(start_clip.x(), start_clip.y(), start_clip.z()),
-                            new Location(end_clip.x(), end_clip.y(), end_clip.z())
-                    );
-                    System.out.println("スクリーンショットが保存されました。");
-                    System.out.println("//スタートでクリックした場所は" + start_clip.x() + "," + start_clip.y() + "," + start_clip.z());
-                    System.out.println("//エンドでクリックした場所は" + end_clip.x() + "," + end_clip.y() + "," + end_clip.z());
-                    resetLocation();
-                } catch (AWTException | IOException ex) {
-                    throw new RuntimeException(ex);
-                }
+
+                AtomicBoolean bb = new AtomicBoolean(true);
+                Timeline timer = new Timeline();
+                timer.getKeyFrames().add(
+                        new KeyFrame(Duration.millis(0.5), a -> {
+                            screen_pane.getChildren().clear();
+                            PointerInfo info = MouseInfo.getPointerInfo();
+                            Point loc = info.getLocation();
+                            System.out.println("//スタートでクリックした場所は" + screen_pane.getChildren().size());
+
+                            screen_pane.getChildren().add(start_circle);
+
+                            end_clip = new Location(loc.getX(), loc.getY() ,0);
+                            end_circle.set(new Circle(end_clip.x(), end_clip.y(), 10));
+                            double sc_x = Math.min(start_clip.x(), end_clip.x());
+                            double sc_y = Math.min(start_clip.y(), end_clip.y());
+                            double sc_w = Math.abs(start_clip.x() - end_clip.x());
+                            double sc_h = Math.abs(start_clip.y() - end_clip.y());
+                            Rectangle clip_area = new Rectangle((int) sc_x, (int) sc_y, (int) sc_w, (int) sc_h);
+                            screen_pane.getChildren().add(clip_area);
+                            screen_pane.getChildren().add(end_circle.get());
+
+                            screen_scene.setOnMouseReleased(ac -> {
+                                bb.set(false);
+                                System.out.println("マウス: " + bb);
+                            });
+
+                            if (!bb.get()) {
+                                try {
+                                    ScreenshotManager.save(
+                                            new Location(start_clip.x(), start_clip.y(), start_clip.z()),
+                                            new Location(end_clip.x(), end_clip.y(), end_clip.z())
+                                    );
+                                } catch (AWTException | IOException ex) {
+                                    throw new RuntimeException(ex);
+                                }
+                                System.out.println("スクリーンショットが保存されました。");
+                                System.out.println("//スタートでクリックした場所は" + start_clip.x() + "," + start_clip.y() + "," + start_clip.z());
+                                System.out.println("//エンドでクリックした場所は" + end_clip.x() + "," + end_clip.y() + "," + end_clip.z());
+                                resetLocation();
+                                screen_pane.getChildren().clear();
+                                timer.stop();
+                            }
+                        })
+                );
+                timer.setCycleCount(Timeline.INDEFINITE);
+                timer.play();
             }
         });
     }
